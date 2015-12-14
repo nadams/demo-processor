@@ -1,9 +1,16 @@
 package net.node3.demoprocessor
 
-import akka.actor.Actor
-import spray.routing._
+import java.io.{ ByteArrayInputStream, InputStream, OutputStream }
+
+import akka.actor.{ Actor, Props }
+
 import spray.http._
-import MediaTypes._
+import spray.http.BodyPart
+import spray.http.MediaTypes._
+import spray.httpx.SprayJsonSupport._
+import spray.routing._
+
+import net.node3.demoprocessor.models._
 
 class DemoProcessorActor extends Actor with DemoProcessorService {
   def actorRefFactory = context
@@ -11,18 +18,23 @@ class DemoProcessorActor extends Actor with DemoProcessorService {
 }
 
 trait DemoProcessorService extends HttpService {
-  val config = DemoConfig()
+  import DemoProtocols.demoProcessResponseFormat
 
-  val routes =
-    path("process") {
-      post {
-        respondWithMediaType(`application/json`) {
-          complete {
-            s"""
-              { "test": "${config.zandronumBin}" }
-            """
+  val routes = path("process") {
+    post {
+      processDemo()
+    }
+  }
+
+  def processDemo() = {
+    respondWithMediaType(`application/json`) {
+      entity(as[MultipartFormData]) { data =>
+        complete {
+          data.fields.headOption.map { file =>
+            DemoProcessResponse(file.name.get, file.entity.data.length)
           }
         }
       }
     }
+  }
 }
