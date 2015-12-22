@@ -10,12 +10,15 @@ import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
 import spray.routing._
 
+import net.node3.demoprocessor.data._
+import net.node3.demoprocessor.entities._
 import net.node3.demoprocessor.models._
 import net.node3.demoprocessor.render._
 
 class DemoProcessorActor extends Actor with DemoProcessorService {
   def actorRefFactory = context
   def receive = runRoute(routes)
+  val demoService = new DemoServiceImpl(new DemoRepositoryImpl(DB.db))
 }
 
 trait DemoProcessorService extends HttpService {
@@ -23,9 +26,11 @@ trait DemoProcessorService extends HttpService {
   import spray.json.DefaultJsonProtocol._
   import DemoProtocols.demoProcessResponseFormat
 
+  def demoService
+
   val routes = pathPrefix("process") {
-    path(IntNumber) { id =>
-      respondWithMediaType(`application/json`) {
+    respondWithMediaType(`application/json`) {
+      path(IntNumber) { id =>
         pathEnd {
           get {
             complete {
@@ -47,7 +52,7 @@ trait DemoProcessorService extends HttpService {
     }
   }
 
-  def processDemo(engine: Engines.Engine) = {
+  def processDemo(engine: Engines.Value) = {
     entity(as[MultipartFormData]) { data =>
       complete {
         data.fields.headOption.map { file =>
