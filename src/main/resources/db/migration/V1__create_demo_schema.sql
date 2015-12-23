@@ -10,7 +10,8 @@ INSERT INTO render.status VALUES
 (1, 'Created'),
 (2, 'Rendering'),
 (3, 'Dead'),
-(4, 'Finished');
+(4, 'Finished'),
+(5, 'Cancelled');
 
 CREATE TABLE render.demo (
   id SERIAL NOT NULL,

@@ -25,4 +25,5 @@ object DemoStatus extends Enumeration {
   val Rendering = Value(2)
   val Dead = Value(3)
   val Finished = Value(4)
+  val Cancelled = Value(5)
 }
