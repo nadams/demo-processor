@@ -9,7 +9,9 @@ import akka.actor.{ Actor, Props }
 import spray.http._
 import spray.http.BodyPart
 import spray.http.MediaTypes._
+import spray.http.HttpHeaders._
 import spray.httpx.SprayJsonSupport._
+import spray.httpx.marshalling._
 import spray.routing._
 
 import net.node3.demoprocessor.data._
@@ -52,9 +54,7 @@ trait DemoProcessorService extends HttpService {
             getRender(id)
           } ~
           delete {
-            complete {
-              stopRender(id)
-            }
+            stopRender(id)
           }
         }
       }
@@ -80,24 +80,37 @@ trait DemoProcessorService extends HttpService {
         }
 
         import DemoProtocol._
-
-        demoService.renderDemo(engine, demo) match {
-          case Success(demo) => StatusCodes.Accepted -> DemoProcessResponse.toModel(demo)
-          case Failure(ex) => {
-            ex.printStackTrace
-            StatusCodes.InternalServerError -> "Could not render this demo"
-          }
-        }
+        demoAction(demoService.renderDemo(engine, demo))(StatusCodes.Accepted -> DemoProcessResponse.toModel(_))
       }
     }
   }
 
   def getRender(id: String) = complete {
+    demoAction(demoService.getRender(id))(demoSuccess)
+  }
+
+  def stopRender(id: String) = complete {
+    demoAction(demoService.stopRender(id))(demoSuccess)
+  }
+
+  def getRenderData(id: String) = respondWithMediaType(`application/octet-stream`) {
+    respondWithHeader(`Content-Disposition`("attachment", Map("filename" -> "demo.cld"))) {
+      complete {
+        demoAction(demoService.getRender(id))(StatusCodes.OK -> _.data)
+      }
+    }
+  }
+
+  private def demoSuccess(demo: Demo): ToResponseMarshallable = {
     import DemoProtocol._
 
-    demoService.getRender(id) match {
+    StatusCodes.OK -> DemoProcessResponse.toModel(demo)
+  }
+
+  private def demoAction(in: Try[Option[Demo]])(action: Demo => ToResponseMarshallable): ToResponseMarshallable =
+    in match {
       case Success(demo) => demo match {
-        case Some(d) => StatusCodes.OK -> DemoProcessResponse.toModel(d)
+        case Some(d) => action(d)
         case None => StatusCodes.NotFound -> Error("Demo not found")
       }
       case Failure(ex) => {
@@ -105,13 +118,4 @@ trait DemoProcessorService extends HttpService {
         StatusCodes.InternalServerError -> "Could not get the requested render"
       }
     }
-  }
-
-  def stopRender(id: String) = ???
-
-  def getRenderData(id: String) = respondWithMediaType(`application/octet-stream`) {
-    complete {
-      Array[Byte]()
-    }
-  }
 }

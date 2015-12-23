@@ -6,6 +6,7 @@ import net.node3.demoprocessor.entities._
 
 trait DemoRepository {
   def insert(demo: Demo): Demo
+  def update(demo: Demo): Demo
   def getByRenderId(renderId: String): Option[Demo]
 }
 
@@ -14,6 +15,10 @@ class DemoRepositoryImpl(val db: Database) extends DemoRepository with DemoSchem
 
   import anorm._
   import anorm.SqlParser._
+
+  def update(demo: Demo): Demo = db.withTransaction { implicit connection =>
+    demo
+  }
 
   def getByRenderId(renderId: String): Option[Demo] = db.withConnection { implicit connection =>
     SQL"""
