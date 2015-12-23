@@ -6,8 +6,8 @@ case class Demo(
   val id: Int,
   val renderId: String,
   val status: DemoStatus.Value,
-  val created: ZonedDateTime,
-  val completed: Option[ZonedDateTime],
+  val created: Instant,
+  val completed: Option[Instant],
   val wads: Seq[DemoWad],
   val data: Option[Array[Byte]]
 )
@@ -15,9 +15,23 @@ case class Demo(
 object Demo {
   import java.util.UUID
 
-  private val utc = ZoneOffset.UTC
+  import anorm._
+  import anorm.SqlParser._
 
-  def default = Demo(0, UUID.randomUUID.toString, DemoStatus.Created, ZonedDateTime.now(utc), None, Seq.empty, None)
+  val singleRowParser =
+    int("id") ~
+    str("render_id") ~
+    int("status") ~
+    get[Instant]("created") ~
+    get[Option[Instant]]("completed") ~
+    get[Option[Array[Byte]]]("data") map flatten
+
+  val multiRowParser = singleRowParser *
+
+  def apply(x: (Int, String, Int, Instant, Option[Instant], Option[Array[Byte]])): Demo =
+    Demo(x._1, x._2, DemoStatus(x._3), x._4, x._5, Seq.empty, x._6)
+
+  def default = Demo(0, UUID.randomUUID.toString, DemoStatus.Created, Instant.now, None, Seq.empty, None)
 }
 
 object DemoStatus extends Enumeration {

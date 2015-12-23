@@ -7,6 +7,7 @@ import net.node3.demoprocessor.data._
 
 trait DemoService {
   def renderDemo(engine: Engines.Value, demo: Demo): Try[Demo]
+  def getRender(id: String): Try[Option[Demo]]
 }
 
 class DemoServiceImpl(val demoRepo: DemoRepository) extends DemoService {
@@ -16,4 +17,6 @@ class DemoServiceImpl(val demoRepo: DemoRepository) extends DemoService {
     println(newDemo)
     newDemo
   }
+
+  def getRender(id: String): Try[Option[Demo]] = Try(demoRepo.getByRenderId(id))
 }

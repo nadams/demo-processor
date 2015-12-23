@@ -6,6 +6,7 @@ import net.node3.demoprocessor.entities._
 
 trait DemoRepository {
   def insert(demo: Demo): Demo
+  def getByRenderId(renderId: String): Option[Demo]
 }
 
 class DemoRepositoryImpl(val db: Database) extends DemoRepository with DemoSchema {
@@ -13,6 +14,37 @@ class DemoRepositoryImpl(val db: Database) extends DemoRepository with DemoSchem
 
   import anorm._
   import anorm.SqlParser._
+
+  def getByRenderId(renderId: String): Option[Demo] = db.withConnection { implicit connection =>
+    SQL"""
+      SELECT
+        d.id AS id,
+        d.render_id AS render_id,
+        d.status AS status,
+        d.created AS created,
+        d.completed AS completed,
+        dd.data AS data
+      FROM #$demoSchema.demo AS d
+        LEFT OUTER JOIN #$demoSchema.demo_data AS dd ON d.id = dd.id
+      WHERE d.render_id = $renderId
+    """
+    .as(Demo.singleRowParser singleOpt)
+    .map(Demo(_))
+    .map { demo =>
+      demo.copy(wads = SQL"""
+          SELECT
+            w.id AS id,
+            w.filename AS filename,
+            TRIM(trailing from w.checksum) AS checksum
+          FROM #$demoSchema.demo_wad AS dw
+            INNER JOIN #$demoSchema.wad AS w ON dw.wad_id = w.id
+          WHERE dw.demo_id = ${demo.id}
+        """
+        .as(DemoWad.multiRowParser)
+        .map(DemoWad(_))
+      )
+    }
+  }
 
   def insert(demo: Demo): Demo = db.withTransaction { implicit conection =>
     var newDemo: Demo = demo.copy(id =

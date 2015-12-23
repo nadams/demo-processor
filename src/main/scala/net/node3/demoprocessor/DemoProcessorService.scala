@@ -28,27 +28,34 @@ trait DemoProcessorService extends HttpService {
   import spray.json._
   import spray.json.DefaultJsonProtocol._
 
+  import ErrorProtocol._
+
   def demoService: DemoService
 
-  val routes = pathPrefix("process") {
+  val routes = pathPrefix("render") {
     respondWithMediaType(`application/json`) {
-      path(IntNumber) { id =>
-        pathEnd {
-          get {
-            complete {
-              Map("get" -> getRender(id))
-            }
-          } ~
-          delete {
-            complete {
-              Map("delete" -> stopRender(id))
-            }
-          }
-        }
-      } ~
       path("zandronum") {
         post {
           processDemo(Engines.Zandronum)
+        }
+      } ~
+      path(Segment / "file") { id =>
+        pathEnd {
+          get {
+            getRenderData(id)
+          }
+        }
+      } ~
+      path(Segment) { id =>
+        pathEnd {
+          get {
+            getRender(id)
+          } ~
+          delete {
+            complete {
+              stopRender(id)
+            }
+          }
         }
       }
     }
@@ -57,7 +64,6 @@ trait DemoProcessorService extends HttpService {
   def processDemo(engine: Engines.Value) = {
     entity(as[MultipartFormData]) { data =>
       complete {
-
         val demo = data.fields.foldLeft(Demo.default) { (acc, item) =>
           item.name.map { name =>
             if(name == "file") {
@@ -78,7 +84,6 @@ trait DemoProcessorService extends HttpService {
         demoService.renderDemo(engine, demo) match {
           case Success(demo) => StatusCodes.Accepted -> DemoProcessResponse.toModel(demo)
           case Failure(ex) => {
-            println(ex)
             ex.printStackTrace
             StatusCodes.InternalServerError -> "Could not render this demo"
           }
@@ -87,6 +92,26 @@ trait DemoProcessorService extends HttpService {
     }
   }
 
-  def getRender(id: Int): Int = id
-  def stopRender(id: Int): Int = id
+  def getRender(id: String) = complete {
+    import DemoProtocol._
+
+    demoService.getRender(id) match {
+      case Success(demo) => demo match {
+        case Some(d) => StatusCodes.OK -> DemoProcessResponse.toModel(d)
+        case None => StatusCodes.NotFound -> Error("Demo not found")
+      }
+      case Failure(ex) => {
+        ex.printStackTrace
+        StatusCodes.InternalServerError -> "Could not get the requested render"
+      }
+    }
+  }
+
+  def stopRender(id: String) = ???
+
+  def getRenderData(id: String) = respondWithMediaType(`application/octet-stream`) {
+    complete {
+      Array[Byte]()
+    }
+  }
 }

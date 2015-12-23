@@ -1,6 +1,6 @@
 package net.node3.demoprocessor.models
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import spray.json._
 import spray.json.DefaultJsonProtocol._
@@ -27,8 +27,8 @@ object DemoProcessResponse {
 case class DemoProcessResponse(
   val renderId: String,
   val status: String,
-  val created: ZonedDateTime,
-  val completed: Option[ZonedDateTime],
+  val created: Instant,
+  val completed: Option[Instant],
   val wads: Seq[Wad]
 )
 
