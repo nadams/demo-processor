@@ -14,6 +14,7 @@ import net.node3.demoprocessor.data._
 import net.node3.demoprocessor.entities._
 import net.node3.demoprocessor.models._
 import net.node3.demoprocessor.render._
+import net.node3.demoprocessor.services._
 
 class DemoProcessorActor extends Actor with DemoProcessorService {
   def actorRefFactory = context
@@ -26,7 +27,7 @@ trait DemoProcessorService extends HttpService {
   import spray.json.DefaultJsonProtocol._
   import DemoProtocols.demoProcessResponseFormat
 
-  def demoService
+  def demoService: DemoService
 
   val routes = pathPrefix("process") {
     respondWithMediaType(`application/json`) {

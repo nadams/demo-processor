@@ -20,9 +20,20 @@ libraryDependencies ++= {
     "org.specs2" %% "specs2-core" % specsV % "test",
     "org.specs2" %% "specs2-mock" % specsV % "test",
     "com.typesafe.play" %% "anorm" % "2.5.0",
+    "postgresql" % "postgresql" % "9.1-901-1.jdbc4",
     "com.typesafe.play" %% "play-jdbc" % "2.4.6",
     "com.typesafe.play" %% "play-jdbc-api" % "2.4.6"
   )
 }
 
 Revolver.settings
+
+seq(flywaySettings: _*)
+
+flywayBaselineOnMigrate := true
+
+flywaySchemas := Seq("render")
+
+flywayUrl := "jdbc:postgresql://localhost/idl"
+
+flywayUser := "postgres"
