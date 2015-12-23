@@ -1,4 +1,4 @@
-CREATE TABLE render.status(
+CREATE TABLE render.status (
   id INT NOT NULL,
   value VARCHAR(32) NOT NULL,
 
@@ -12,19 +12,19 @@ INSERT INTO render.status VALUES
 (3, 'Dead'),
 (4, 'Finished');
 
-CREATE TABLE render.demo(
+CREATE TABLE render.demo (
   id SERIAL NOT NULL,
-  process_id CHAR(36) NOT NULL,
+  render_id CHAR(36) NOT NULL,
   status INT NOT NULL,
   created TIMESTAMP WITH TIME ZONE NOT NULL,
   completed TIMESTAMP WITH TIME ZONE NULL,
 
   CONSTRAINT pk_demo PRIMARY KEY (id),
-  CONSTRAINT uq_demo_process_id UNIQUE (process_id),
+  CONSTRAINT uq_demo_render_id UNIQUE (render_id),
   CONSTRAINT fk_demo_status FOREIGN KEY (status) REFERENCES render.status(id)
 );
 
-CREATE TABLE render.demo_data(
+CREATE TABLE render.demo_data (
   id INT NOT NULL,
   data BYTEA NOT NULL,
 
@@ -32,7 +32,7 @@ CREATE TABLE render.demo_data(
   CONSTRAINT fk_demo_data_demo FOREIGN KEY (id) REFERENCES render.demo(id)
 );
 
-CREATE TABLE render.wad(
+CREATE TABLE render.wad (
   id SERIAL NOT NULL,
   filename VARCHAR(255) NOT NULL,
   checksum CHAR(32) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE render.wad(
   CONSTRAINT uq_wad UNIQUE (filename, checksum)
 );
 
-CREATE TABLE render.demo_wad(
+CREATE TABLE render.demo_wad (
   demo_id INT NOT NULL,
   wad_id INT NOT NULL,
 

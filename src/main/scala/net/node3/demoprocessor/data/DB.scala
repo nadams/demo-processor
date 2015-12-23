@@ -4,9 +4,11 @@ import play.api.db.PooledDatabase
 
 object DB {
   import play.api.Configuration
-  import net.node3.demoprocessor.config.DemoConfig
+  import com.typesafe.config.ConfigFactory
 
-  private val conf = new Configuration(DemoConfig.conf.getConfig("db"))
+  private val defaultdb = "default"
 
-  val db = new PooledDatabase("default", conf)
+  val dbConf = ConfigFactory.load().getConfig(s"db.$defaultdb")
+
+  val db = new PooledDatabase(defaultdb, new Configuration(dbConf))
 }

@@ -1,15 +1,24 @@
 package net.node3.demoprocessor.entities
 
-import java.time.ZonedDateTime
+import java.time._
 
 case class Demo(
   val id: Int,
-  val processId: String,
+  val renderId: String,
   val status: DemoStatus.Value,
   val created: ZonedDateTime,
   val completed: Option[ZonedDateTime],
-  val wads: Seq[DemoWad]
+  val wads: Seq[DemoWad],
+  val data: Option[Array[Byte]]
 )
+
+object Demo {
+  import java.util.UUID
+
+  private val utc = ZoneOffset.UTC
+
+  def default = Demo(0, UUID.randomUUID.toString, DemoStatus.Created, ZonedDateTime.now(utc), None, Seq.empty, None)
+}
 
 object DemoStatus extends Enumeration {
   val Created = Value(1)
