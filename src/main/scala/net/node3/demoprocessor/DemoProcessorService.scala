@@ -27,7 +27,6 @@ class DemoProcessorActor extends Actor with DemoProcessorService {
 trait DemoProcessorService extends HttpService {
   import spray.json._
   import spray.json.DefaultJsonProtocol._
-  import DemoProtocols.demoProcessResponseFormat
 
   def demoService: DemoService
 
@@ -58,13 +57,14 @@ trait DemoProcessorService extends HttpService {
   def processDemo(engine: Engines.Value) = {
     entity(as[MultipartFormData]) { data =>
       complete {
-        import WadProtocol._
 
         val demo = data.fields.foldLeft(Demo.default) { (acc, item) =>
           item.name.map { name =>
             if(name == "file") {
               acc.copy(data = Some(item.entity.data.toByteArray))
             } else if (name == "wads") {
+              import WadProtocol._
+
               val wads = item.entity.data.asString.parseJson.convertTo[Seq[Wad]]
               acc.copy(wads = wads.map(_.toEntity))
             } else {
@@ -73,8 +73,10 @@ trait DemoProcessorService extends HttpService {
           }.getOrElse(acc)
         }
 
+        import DemoProtocol._
+
         demoService.renderDemo(engine, demo) match {
-          case Success(demo) => DemoProcessResponse(demo.renderId)
+          case Success(demo) => StatusCodes.Accepted -> DemoProcessResponse.toModel(demo)
           case Failure(ex) => {
             println(ex)
             ex.printStackTrace

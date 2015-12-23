@@ -1,11 +1,34 @@
 package net.node3.demoprocessor.models
 
+import java.time.ZonedDateTime
+
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 
-object DemoProtocols extends DefaultJsonProtocol {
-  implicit val demoProcessResponseFormat = jsonFormat1(DemoProcessResponse.apply)
+import net.node3.demoprocessor.entities.Demo
+import net.node3.demoprocessor.json.CustomFormats._
+
+object DemoProtocol extends DefaultJsonProtocol {
+  import WadProtocol.format
+
+  implicit val formatDemo = jsonFormat5(DemoProcessResponse.apply)
 }
 
-case class DemoProcessResponse(val renderId: String)
+object DemoProcessResponse {
+  def toModel(entity: Demo) = DemoProcessResponse(
+    entity.renderId,
+    entity.status.toString,
+    entity.created,
+    entity.completed,
+    entity.wads.map(Wad.toModel(_))
+  )
+}
+
+case class DemoProcessResponse(
+  val renderId: String,
+  val status: String,
+  val created: ZonedDateTime,
+  val completed: Option[ZonedDateTime],
+  val wads: Seq[Wad]
+)
 

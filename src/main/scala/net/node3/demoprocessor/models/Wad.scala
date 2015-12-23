@@ -13,4 +13,8 @@ case class Wad(val filename: String, val checksum: String) {
   def toEntity() = DemoWad(0, filename, checksum)
 }
 
+object Wad {
+  def toModel(wad: DemoWad) = Wad(wad.filename, wad.checksum)
+}
+
 
